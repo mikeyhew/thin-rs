@@ -1,0 +1,7 @@
+[package]
+name = "thin"
+version = "0.1.0"
+authors = ["Michael Hewson <michael@michaelhewson.ca>"]
+
+[dependencies]
+dyn_sized = { git = "https://github.com/mikeyhew/dyn_sized" }
