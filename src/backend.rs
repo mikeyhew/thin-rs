@@ -5,6 +5,7 @@ use std::marker::Unsize;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 
+/// The storage format for thin pointers. Stores the metadata and the value together.
 #[derive(Debug)]
 pub struct ThinBackend<D, T> where
     D: DynSized + ?Sized,
@@ -12,28 +13,6 @@ pub struct ThinBackend<D, T> where
 {
     pub meta: D::Meta,
     pub value: T
-}
-
-impl<D> ThinBackend<D, D> where
-    D: AssembleSafe + ?Sized
-{
-    pub fn size_of_backend(src: &D) -> usize {
-
-        let src_as_backend: &ThinBackend<D, D> = unsafe {
-            mem::transmute(src)
-        };
-
-        mem::size_of_val(src_as_backend)
-    }
-
-    pub fn align_of_backend(src: &D) -> usize {
-
-        let src_as_backend: &ThinBackend<D, D> = unsafe {
-            mem::transmute(src)
-        };
-
-        mem::align_of_val(src_as_backend)
-    }
 }
 
 impl<D> DynSized for ThinBackend<D, D> where
@@ -69,6 +48,28 @@ impl<D, S> ThinBackend<D, S> where
 {
     pub fn into_value(self) -> S {
         self.value
+    }
+}
+
+impl<D> ThinBackend<D, D> where
+    D: AssembleSafe + ?Sized
+{
+    pub fn size_of_backend(src: &D) -> usize {
+
+        let src_as_backend: &ThinBackend<D, D> = unsafe {
+            mem::transmute(src)
+        };
+
+        mem::size_of_val(src_as_backend)
+    }
+
+    pub fn align_of_backend(src: &D) -> usize {
+
+        let src_as_backend: &ThinBackend<D, D> = unsafe {
+            mem::transmute(src)
+        };
+
+        mem::align_of_val(src_as_backend)
     }
 }
 
