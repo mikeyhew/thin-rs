@@ -5,3 +5,6 @@ authors = ["Michael Hewson <michael@michaelhewson.ca>"]
 
 [dependencies]
 dyn_sized = { git = "https://github.com/mikeyhew/dyn_sized" }
+fn_move = { git = "https://github.com/mikeyhew/fn_move" }
+
+[dev-dependencies]
