@@ -1,7 +1,9 @@
 [package]
 name = "thin"
+description = "Thin pointers to dynamically sized types"
 version = "0.1.0"
 authors = ["Michael Hewson <michael@michaelhewson.ca>"]
+license = "MIT/Apache-2.0"
 
 [dependencies]
 dyn_sized = "^0.1"
