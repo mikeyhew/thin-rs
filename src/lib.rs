@@ -1,4 +1,4 @@
-#![feature(unique, unsize, fnbox, fn_traits, unboxed_closures, alloc, heap_api, allocator_api, const_cell_new)]
+#![feature(unique, unsize, fnbox, fn_traits, unboxed_closures, alloc, heap_api, allocator_api)]
 
 #[allow(unused)]
 #[macro_use]

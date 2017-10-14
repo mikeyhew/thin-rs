@@ -3,7 +3,6 @@ extern crate thin;
 extern crate fn_move;
 
 use thin::ThinBox;
-use thin::ThinBackend;
 use fn_move::FnMove;
 
 #[test]
