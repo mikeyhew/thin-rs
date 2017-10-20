@@ -1,6 +1,5 @@
-use super::dyn_sized::{DynSized, AssembleSafe};
+use super::dyn_sized::{self, DynSized};
 
-use std::ptr;
 use std::marker::Unsize;
 use std::mem;
 use std::ops::{Deref, DerefMut};
@@ -15,18 +14,23 @@ pub struct ThinBackend<D, T> where
     pub value: T
 }
 
-impl<D> DynSized for ThinBackend<D, D> where
+unsafe impl<D> DynSized for ThinBackend<D, D> where
     D: DynSized + ?Sized
 {
-    type Meta = ();
+    type Meta = D::Meta;
 
-    unsafe fn assemble(_: (), data: *const ()) -> *const Self {
-        let meta = ptr::read(data as *const ThinBackend<D, ()>).meta;
-        mem::transmute(D::assemble(meta, data))
+    fn assemble(meta: D::Meta, data: *const ()) -> *const Self {
+        let d_ptr: *const D = D::assemble(meta, data);
+        unsafe {
+            mem::transmute(d_ptr)
+        }
     }
 
-    fn disassemble(ptr: *const Self) -> ((), *const ()) {
-        ((), ptr as *const ())
+    fn disassemble(ptr: *const Self) -> (D::Meta, *const ()) {
+        let d_ptr: *const D = unsafe {
+            mem::transmute(ptr)
+        };
+        D::disassemble(d_ptr)
     }
 }
 
@@ -42,7 +46,6 @@ impl<D, S> ThinBackend<D, S> where
     }
 }
 
-
 impl<D, S> ThinBackend<D, S> where
     D: DynSized + ?Sized
 {
@@ -52,24 +55,26 @@ impl<D, S> ThinBackend<D, S> where
 }
 
 impl<D> ThinBackend<D, D> where
-    D: AssembleSafe + ?Sized
+    D: DynSized + ?Sized
 {
+    pub unsafe fn fat_from_thin(data: *const ()) -> *const ThinBackend<D, D> {
+        let ptr = data as *const ThinBackend<D, ()>;
+        let meta = (*ptr).meta;
+        ThinBackend::assemble(meta, data)
+    }
+
+    pub unsafe fn fat_from_thin_mut(data: *mut ()) -> *mut ThinBackend<D, D> {
+        let ptr = data as *mut ThinBackend<D, ()>;
+        let meta = (*ptr).meta;
+        ThinBackend::assemble_mut(meta, data)
+    }
+
     pub fn size_of_backend(src: &D) -> usize {
-
-        let src_as_backend: &ThinBackend<D, D> = unsafe {
-            mem::transmute(src)
-        };
-
-        mem::size_of_val(src_as_backend)
+        dyn_sized::size_of_val::<ThinBackend<D, D>>(src.meta())
     }
 
     pub fn align_of_backend(src: &D) -> usize {
-
-        let src_as_backend: &ThinBackend<D, D> = unsafe {
-            mem::transmute(src)
-        };
-
-        mem::align_of_val(src_as_backend)
+        dyn_sized::align_of_val::<ThinBackend<D,D>>(src.meta())
     }
 }
 
