@@ -6,6 +6,7 @@ use std::ops::{Deref, DerefMut};
 
 /// The storage format for thin pointers. Stores the metadata and the value together.
 #[derive(Debug)]
+#[repr(C)]
 pub struct ThinBackend<D, T> where
     D: DynSized + ?Sized,
     T: ?Sized
