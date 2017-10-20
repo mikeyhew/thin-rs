@@ -1,13 +1,13 @@
 [package]
 name = "thin"
 description = "Thin pointers to dynamically sized types"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Michael Hewson <michael@michaelhewson.ca>"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/mikeyhew/thin-rs"
 
 [dependencies]
-dyn_sized =  { path = "../dyn_sized" }
+dyn_sized =  "^0.2"
 fn_move = "^0.1"
 
 [dev-dependencies]
