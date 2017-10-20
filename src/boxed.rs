@@ -193,7 +193,7 @@ unsafe fn copy_into_new_box<D: DynSized + ?Sized>(src: &D) -> Box<D> {
             Err(err) => Heap.oom(err)
         }
     };
-    
+
     ptr::copy_nonoverlapping(
         src as *const D as *const u8,
         dest as *mut u8,
