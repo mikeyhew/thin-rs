@@ -1,5 +1,5 @@
 use super::ThinBackend;
-use super::{DynSized, AssembleSafe};
+use super::DynSized;
 use super::FnMove;
 use dyn_sized::{self};
 
@@ -36,7 +36,7 @@ impl<D> ThinBox<D> where
         let bx = Box::new(backend) as Box<ThinBackend<D, D>>;
         ThinBox::from_box(bx)
     }
-    
+
     /// performs a shallow drop, freeing the memory owned by `self` without
     /// dropping the contained value
     pub fn free(self) {
@@ -44,7 +44,7 @@ impl<D> ThinBox<D> where
     }
 
     pub fn from_box(bx: Box<ThinBackend<D, D>>) -> ThinBox<D> {
-        let ((), backend_ptr) = ThinBackend::disassemble_mut(Box::into_raw(bx));
+        let backend_ptr = Box::into_raw(bx) as *mut ();
         ThinBox {
             backend_ptr: unsafe { Unique::new_unchecked(backend_ptr) },
             _marker: PhantomData
@@ -53,7 +53,7 @@ impl<D> ThinBox<D> where
 
     pub fn into_box(self) -> Box<ThinBackend<D, D>> {
         unsafe {
-            let ptr = ThinBackend::assemble_mut((), self.backend_ptr.as_ptr());
+            let ptr: *mut ThinBackend<D,D> = ThinBackend::fat_from_thin_mut(self.backend_ptr.as_ptr());
             let bx = Box::from_raw(ptr);
 
             // this call to mem::forget is critical. I forgot to call it, and it cost me hours of debugging
@@ -71,21 +71,21 @@ impl<D> ThinBox<D> where
 
     fn as_ptr(&self) -> *const D {
         unsafe {
-            let backend_fat = ThinBackend::assemble((), self.backend_ptr.as_ptr());
+            let backend_fat = ThinBackend::fat_from_thin(self.backend_ptr.as_ptr());
             &(**backend_fat) as *const D
         }
     }
 
     fn as_mut_ptr(&mut self) -> *mut D {
         unsafe {
-            let backend_fat = ThinBackend::assemble_mut((), self.backend_ptr.as_ptr());
+            let backend_fat = ThinBackend::fat_from_thin_mut(self.backend_ptr.as_ptr());
             &mut **backend_fat as *mut D
         }
     }
 }
 
 impl<D> ThinBox<D> where
-    D: AssembleSafe + ?Sized
+    D: DynSized + ?Sized
 {
     pub unsafe fn copy_into_new(src: &D) -> ThinBox<D> {
         let size = <ThinBackend<D,D>>::size_of_backend(src);
@@ -101,10 +101,10 @@ impl<D> ThinBox<D> where
                 Err(err) => Heap.oom(err)
             }
         };
-        
-        let backend_ptr = new_data_ptr as *mut ThinBackend<D, ()>;
-        ptr::write(&mut (*backend_ptr).meta, src.meta());
-        let backend_ptr: *mut ThinBackend<D,D> = ThinBackend::assemble_mut((), backend_ptr as *mut ());
+
+        let backend_ptr: *mut ThinBackend<D,D> = ThinBackend::assemble_mut(src.meta(), new_data_ptr);
+
+        (*backend_ptr).meta = src.meta();
 
         ptr::copy_nonoverlapping(
             src as *const D as *const u8,
@@ -223,7 +223,7 @@ fn test_box_free() {
     use std::any::Any;
     use dyn_sized::WrapSized;
     let bx = Box::new(WrapSized(Foo)) as Box<Any>;
-    
+
     // move *bx into bx2
     let bx2 = unsafe { copy_into_new_box(&*bx) };
     free(bx);

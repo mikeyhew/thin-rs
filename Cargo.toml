@@ -7,7 +7,7 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/mikeyhew/thin-rs"
 
 [dependencies]
-dyn_sized = "^0.1"
+dyn_sized =  { path = "../dyn_sized" }
 fn_move = "^0.1"
 
 [dev-dependencies]

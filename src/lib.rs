@@ -34,7 +34,7 @@ pub extern crate dyn_sized;
 extern crate fn_move;
 extern crate alloc;
 
-pub use dyn_sized::{DynSized, AssembleSafe};
+pub use dyn_sized::DynSized;
 pub use fn_move::FnMove;
 
 mod backend;
